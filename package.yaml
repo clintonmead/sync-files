@@ -1,0 +1,56 @@
+name:                sync-files
+version:             0.1.0.0
+github:              "clintonmead/sync-files"
+license:             BSD3
+author:              "Clinton Mead"
+maintainer:          "clintonmead@gmail.com"
+copyright:           "Copyright: (c) 2017 Clinton Mead"
+
+# Metadata used when publishing your package
+synopsis:            A very simple webserver
+category:            Web
+
+description:
+  A program that is intended to sync files with a simple webserver that
+  simply responds to POST requests by saving the file.
+
+
+  A sample webserver that does this is at
+  https://github.com/clintonmead/simple-static-webserver
+
+
+  This is largely a toy program, it's probably not useful without significant
+  modification.
+dependencies:
+- base >= 4.7 && < 5
+
+library:
+  source-dirs: src
+  dependencies:
+  - fsnotify
+  - bytestring
+  - filepath
+  - filelock
+  - http-conduit
+  - http-types
+  - io-string-like
+  - atomic-file-ops
+  - directory
+  ghc-options:
+  - -Wall
+
+executables:
+  sync-files-with-http:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -Wall
+    dependencies:
+    - sync-files
+    - optparse-applicative
+    - network-uri
+    - safe
+    - bytestring
