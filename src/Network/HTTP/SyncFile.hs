@@ -4,7 +4,7 @@
 
 module Network.HTTP.SyncFile (syncFile) where
 
-import System.IO (FilePath, stderr)
+import System.IO (FilePath, stderr, withFile, IOMode(AppendMode))
 import System.FSNotify (
   Event(Added, Modified, Removed),
   WatchManager,
@@ -33,6 +33,7 @@ import Control.Concurrent (threadDelay)
 import Control.Monad (forever)
 import System.FileLock (withFileLock, SharedExclusive(Exclusive))
 import System.Directory (makeAbsolute)
+import Data.Semigroup ((<>))
 
 syncFile :: BS.ByteString -> Int -> BS.ByteString -> Int -> FilePath -> IO ()
 syncFile hostName hostPort hostPath serverCheckMicroseconds relativeFilePath =
@@ -40,6 +41,8 @@ syncFile hostName hostPort hostPath serverCheckMicroseconds relativeFilePath =
     requestBasics = setRequestHost hostName . setRequestPath hostPath . setRequestPort hostPort $ defaultRequest
   in do
     filePath <- makeAbsolute relativeFilePath
+    let lockFilePath = filePath <> ".lock"
+    withFile lockFilePath AppendMode (const (pure ())) -- create lock file if it doesn't exist
     (initialContents :: BS.ByteString) <- hGetContents filePath
     currentContentsRef <- newIORef initialContents
     listenToEvents <- newIORef True
@@ -65,7 +68,7 @@ syncFile hostName hostPort hostPath serverCheckMicroseconds relativeFilePath =
                 hPutStrLn stderr ("Body:" :: BS.ByteString)
                 hPutStrLn stderr body
     let
-      uploadFile = withFileLock filePath Exclusive go where
+      uploadFile = withFileLock lockFilePath Exclusive go where
         go _ = do
           newContents <- hGetContents filePath
           doUpload newContents
@@ -108,7 +111,7 @@ syncFile hostName hostPort hostPath serverCheckMicroseconds relativeFilePath =
                 pure (doUpload actualFileContents, Nothing)
           in do
             atomicWriteIORef listenToEvents False
-            atomicModifyFile Nothing filePath f
+            atomicModifyFile Nothing lockFilePath filePath f
             atomicWriteIORef listenToEvents True
     let
       eventFunction event = do

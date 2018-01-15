@@ -3,4 +3,4 @@ packages:
 - .
 extra-deps:
 - io-string-like-0.1.0.1
-- atomic-file-ops-0.1.0.1
+- atomic-file-ops-0.3.0.0
