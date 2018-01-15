@@ -95,7 +95,7 @@ syncFile hostName hostPort hostPath serverCheckMicroseconds relativeFilePath =
                           note "Downloaded file is the same as current file so do nothing"
                           pure (pure (), Nothing)
                         False -> do
-                          note "Downloaded file is different current file so replace"
+                          note "Downloaded file is different to current file so replace"
                           atomicWriteIORef currentContentsRef body
                           pure (pure (), Just body)
                   | otherwise -> do
